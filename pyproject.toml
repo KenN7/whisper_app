@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "whisper-app"
+version = "0.1.0"
+description = ""
+authors = ["Ken <ken@kenh.fr>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+faster-whisper = "^0.10.0"
+fastapi = "^0.109.2"
+python-multipart = "^0.0.9"
+uvicorn = "^0.27.1"
+httpx = "^0.26.0"
+notion-client = "^2.2.1"
+python-telegram-bot = "^20.8"
+motor = {extras = ["asyncio"], version = "^3.3.2"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+bcrypt = "^4.1.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
