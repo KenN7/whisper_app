@@ -1,9 +1,9 @@
 from typing import Dict, List, Annotated, Union
 from fastapi import APIRouter, BackgroundTasks, File, UploadFile, Query, Header, Depends 
 from fastapi import HTTPException
+from db.utils import get_api_key
 from transcribe.fasterwhisper import transcribe_file_fast
-from models import User
-from auth import get_current_user
+from users.models import User
 
 router = APIRouter(prefix="/file")
 
@@ -13,7 +13,7 @@ async def handle_file_upload(
     background_tasks: BackgroundTasks,
     audio_file: UploadFile,
     model: str = "small",
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_api_key),
 ):
     # ... access file contents from audio_file
     location = await get_audio_data(audio_file)

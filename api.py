@@ -1,17 +1,18 @@
-from fastapi import FastAPI, BackgroundTasks, File, UploadFile, Query, HTTPException, Depends, status 
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from typing import Annotated
+from fastapi import (
+    FastAPI,
+    Depends,
+)
+from typing import Annotated, List
 
+from contextlib import asynccontextmanager
 from config import config
-from auth import authenticate_user, create_access_token, get_current_user
-from crud import create_user
-from models import User, UserCreate, Token
+from db.utils import get_api_key
+from users.router import router as user_router
+from users.models import User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-app = FastAPI()
 
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def startup(app: FastAPI):
     # Dynamic Input Selection
     for input in config["inputs"]:
         if input == "telegram":
@@ -26,33 +27,27 @@ async def startup():
 
             app.include_router(file.router)
 
+    yield
     # Dynamic Output Selection
-    #for output in config["outputs"]:
+    # for output in config["outputs"]:
     #    if output == "notion":
     #        from output_modules import notion
 
+
+app = FastAPI(lifespan=startup)
+# include the user router
+app.include_router(user_router)
 
 
 @app.get("/ping")
 async def ping():
     return {"data": "pong"}
 
+
 @app.get("/protected_ping")
-async def protected_data(current_user: User = Depends(get_current_user)):
+async def protected_data(user: User = Depends(get_api_key)):
     # Only accessible if authentication is successful
-    return {"secret_data": "This is only for authorized users", "username": current_user.username} 
-
-@app.post("/signup", response_model=User)
-async def signup(user: UserCreate):
-    return await create_user(user)
-
-@app.post("/token", response_model=Token)
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user = await authenticate_user(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password"
-        )
-    access_token = create_access_token(data={"sub": user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "secret_data": "This is only for authorized users",
+        "user": user,
+    }
